@@ -147,15 +147,15 @@ async def is_server_at_host(session, host, schema='http'):
         async with session.get(url, allow_redirects=False) as resp:
             logging.info('server at '+url)
             return True
-    except ( aiohttp.client_exceptions.ClientConnectorError
-           , aiohttp.client_exceptions.ServerDisconnectedError
-           , asyncio.TimeoutError
-           ) as e:
+    except (aiohttp.client_exceptions.ClientConnectorError,
+            aiohttp.client_exceptions.ServerDisconnectedError,
+            asyncio.TimeoutError) as e:
         logging.debug('no server at '+url)
         return False
 
 
-async def _wardial_async(hosts, max_connections=500, timeout=10, schema='http'):
+async def _wardial_async(
+        hosts, max_connections=500, timeout=10, schema='http'):
     '''
     For each host in `hosts`, check whether there is a server.
     Returns a list of Bools the same length as `hosts.
@@ -168,17 +168,22 @@ async def _wardial_async(hosts, max_connections=500, timeout=10, schema='http'):
     >>> loop = asyncio.new_event_loop()
     >>> loop.run_until_complete(_wardial_async(['google.com']))
     [True]
-    >>> loop.run_until_complete(_wardial_async(['google.com', 'bad-domain-name', 'microsoft.com']))
+    >>> loop.run_until_complete(
+            _wardial_async(['google.com', 'bad-domain-name', 'microsoft.com']))
     [True, False, True]
     >>> loop.close()
 
     NOTE:
-    Testing IO functions is made extra hard because they rely on IO performing correctly.
-    The tests above won't work if the google.com or microsoft.com webpages go down.
+    Testing IO functions is made extra hard because they rely
+    on IO performing correctly.
+    The tests above won't work if the google.com or microsoft.com
+    webpages go down.
 
     NOTE:
     This is a helper function for the wardial function.
-    In python, functions prefixed with an underscore are intended to be thought of as "private" or "internal" functions,
+    In python, functions prefixed with an underscore
+    are intended to be thought of as "private" or
+    "internal" functions,
     and not as functions that should be called directly by a user.
     '''
     connector = aiohttp.TCPConnector(
@@ -187,7 +192,7 @@ async def _wardial_async(hosts, max_connections=500, timeout=10, schema='http'):
         verify_ssl=False,
         )
     headers = {
-        'host': 'placeholder', # some servers require a host value be set
+        'host': 'placeholder',  # some servers require a host value be set
         'user-agent': 'CMC WarDialer',
         }
     timeout = aiohttp.ClientTimeout(
@@ -201,13 +206,13 @@ async def _wardial_async(hosts, max_connections=500, timeout=10, schema='http'):
             connector=connector,
             ) as session:
         # FIXME (Task 2):
-        # The following code is "correct" in the sense that it gets the right results.
+        # The following code is "correct" in the
+        # sense that it gets the right results.
         # The problem is that it is not concurrent.
-        # Modify the code to use the `asyncio.gather` function to enable concurrency.
-        results = []
-        for host in hosts:
-            results.append(await is_server_at_host(session,host))
-        return results
+        # Modify the code to use the `asyncio.gather` function
+        # to enable concurrency.
+        return await asyncio.gather(*[
+            is_server_at_host(session, host) for host in hosts])
 
 
 def wardial(hosts, **kwargs):
@@ -215,8 +220,10 @@ def wardial(hosts, **kwargs):
     Filter the `hosts` input to keep only those hosts with webservers running.
     Internally, this function will use aiohttp to make concurrent connections.
 
-    >>> wardial(['facebook.com', 'google.com', 'github.com', 'amazon.com', 'microsoft.com', 'netflix.com'])
-    ['facebook.com', 'google.com', 'github.com', 'amazon.com', 'microsoft.com', 'netflix.com']
+    >>> wardial(['facebook.com', 'google.com', 'github.com',
+        'amazon.com', 'microsoft.com', 'netflix.com'])
+    ['facebook.com', 'google.com', 'github.com', 'amazon.com',
+            'microsoft.com', 'netflix.com']
 
     >>> wardial(['208.97.176.235', '23.185.0.2', '142.250.72.174'])
     ['208.97.176.235', '23.185.0.2', '142.250.72.174']
@@ -224,16 +231,23 @@ def wardial(hosts, **kwargs):
     # FIXME (Task 1):
     # Implement this function.
     # You should create a new event loop,
-    # and use this event loop to call the `_wardial_async` function.
-    # Ensure that all of the kwargs parameters get passed to `_wardial_async`.
-    # You will have to do some post-processing of the results of this function to convert the output.
-    return []
+    # and use this event loop to call the `_wardial_async`
+    # function.
+    # Ensure that all of the kwargs parameters get
+    # passed to `_wardial_async`.
+    # You will have to do some post-processing of the
+    # results of this function to convert the output.
+    loop = asyncio.new_event_loop()
+    checked = loop.run_until_complete(_wardial_async(hosts))
+    onlines = [i for i in range(len(checked)) if checked[i]]
+    return [hosts[on] for on in onlines]
 
-if __name__=='__main__':
 
-    # process the cmd line args
+if __name__ == '__main__':
+
     import argparse
-    parser = argparse.ArgumentParser(description='Scan a section of the internet for webservers')
+    parser = argparse.ArgumentParser(
+            description='Scan a section of the internet for webservers')
     parser.add_argument('netmask')
     parser.add_argument('--timeout', type=int, default=10)
     parser.add_argument('--max_connections', type=int, default=500)
@@ -252,5 +266,8 @@ if __name__=='__main__':
 
     # run the wardial
     ips = netmask_to_ips(args.netmask)
-    alive_ips = wardial(ips, timeout=args.timeout, max_connections=args.max_connections, schema=args.schema)
+    alive_ips = wardial(
+            ips, timeout=args.timeout,
+            max_connections=args.max_connections, schema=args.schema
+            )
     print('total ips found =', len(alive_ips))
