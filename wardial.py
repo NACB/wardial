@@ -115,7 +115,7 @@ def netmask_to_ips(netmask):
 
     ip_str, mask_str = netmask.split('/')
     octets = ip_str.split('.')
-    ip_32bit =  int(octets[0]) << 24
+    ip_32bit = int(octets[0]) << 24
     ip_32bit += int(octets[1]) << 16
     ip_32bit += int(octets[2]) << 8
     ip_32bit += int(octets[3])
