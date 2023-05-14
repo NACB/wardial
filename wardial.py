@@ -168,8 +168,7 @@ async def _wardial_async(
     >>> loop = asyncio.new_event_loop()
     >>> loop.run_until_complete(_wardial_async(['google.com']))
     [True]
-    >>> loop.run_until_complete(
-            _wardial_async(['google.com', 'bad-domain-name', 'microsoft.com']))
+    >>> loop.run_until_complete(_wardial_async(['google.com', 'bad-domain-name', 'microsoft.com']))
     [True, False, True]
     >>> loop.close()
 
@@ -220,10 +219,8 @@ def wardial(hosts, **kwargs):
     Filter the `hosts` input to keep only those hosts with webservers running.
     Internally, this function will use aiohttp to make concurrent connections.
 
-    >>> wardial(['facebook.com', 'google.com', 'github.com',
-        'amazon.com', 'microsoft.com', 'netflix.com'])
-    ['facebook.com', 'google.com', 'github.com', 'amazon.com',
-            'microsoft.com', 'netflix.com']
+    >>> wardial(['facebook.com', 'google.com', 'github.com', 'amazon.com', 'microsoft.com', 'netflix.com'])
+    ['facebook.com', 'google.com', 'github.com', 'amazon.com', 'microsoft.com', 'netflix.com']
 
     >>> wardial(['208.97.176.235', '23.185.0.2', '142.250.72.174'])
     ['208.97.176.235', '23.185.0.2', '142.250.72.174']
